@@ -1,0 +1,6 @@
+tables: ['col', 'notes', 'cards', 'revlog', 'deck_config', 'config', 'fields', 'templates', 'notetypes', 'decks', 'sqlite_stat1', 'sqlite_stat4', 'tags', 'graves']
+colver: (18,)
+models err Expecting value: line 1 column 1 (char 0)
+decks err Expecting value: line 1 column 1 (char 0)
+notes: 52
+cards: 52

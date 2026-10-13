@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.pnpm-store/
+*.local
+tools/_ankitest/
+tools/_readings/
+tools/report_parse.txt
+tools/report_deck.txt

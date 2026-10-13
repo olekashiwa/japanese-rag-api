@@ -1,0 +1,24 @@
+{
+  "_comment": "Источники для генерации базы карточек. Пути можно переопределить аргументами CLI.",
+  "sources": [
+    {
+      "role": "guide",
+      "path": "C:\\Users\\Хороший человек\\Documents\\Japanese\\Japanese_for_my_Life\\Учебное пособие по роману コーヒーが冷めないうちに.md",
+      "fallbackName": "Учебное пособие по роману コーヒーが冷めないうちに.md"
+    },
+    {
+      "role": "chapters",
+      "path": "C:\\Users\\Хороший человек\\Documents\\Japanese\\Japanese_for_my_Life\\ГЛАВА 2 夫婦 Супруги.md",
+      "fallbackName": "ГЛАВА 2 夫婦 Супруги.md"
+    }
+  ],
+  "analysis": {
+    "path": "C:\\Users\\Хороший человек\\Documents\\Japanese\\Japanese_for_my_Life\\РАСШИРЕННЫЙ АНАЛИЗ ПО ГЛАВАМ.md",
+    "fallbackName": "РАСШИРЕННЫЙ АНАЛИЗ ПО ГЛАВАМ.md"
+  },
+  "readingsOverride": "data/readings.json",
+  "outputDataset": "src/data/novel.json",
+  "outputReport": "tools/report_parse.txt",
+  "_skipItemsInHeadings": "Фрагменты с такими словами в заголовке попадают в читалку, но из них не делаются карточки (служебный текст).",
+  "skipItemsInHeadings": ["Авторские права"]
+}
