@@ -1,23 +1,31 @@
-# Основные (все встроены в Python, но указаны для документации)
-# tkinter, sqlite3, json, datetime, random, os, pathlib - встроены
+# Core Backend
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
 
-# Дополнительные (устанавливаются через pip)
-matplotlib>=3.5.0
-numpy>=1.21.0
-japanize-matplotlib>=1.1.3
-pandas>=1.3.0
-googletrans==4.0.0-rc1
-pykakasi>=2.2.0
-jamdict>=0.1.6
-pyperclip>=1.8.2
-pillow>=9.0.0
-ttkthemes>=3.2.0
+# Data & RAG
+pandas>=2.2.3
+pyarrow>=17.0.0
+qdrant-client>=1.11.0
+sentence-transformers>=3.1.0
+datasets>=2.21.0
+kagglehub>=0.3.0
 
-# Для тестирования
-pytest>=7.0.0
-pytest-cov>=4.0.0
+# LLM Integration (Local Ollama)
+langchain>=0.3.0
+langchain-core>=0.3.6
+langchain-ollama>=0.2.0
+langchain-text-splitters>=0.3.0
 
-# Для разработки
-black>=22.0.0
-flake8>=5.0.0
-mypy>=0.990
+# PDF Generation (для отчетов платформы)
+weasyprint>=62.0
+segno>=1.6.0
+pypdf>=4.3.0
+Jinja2>=3.1.0
+
+# Utils
+python-dotenv>=1.0.0
+loguru>=0.7.0
+httpx>=0.27.0
+aiofiles>=24.1.0

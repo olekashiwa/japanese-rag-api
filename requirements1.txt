@@ -1,0 +1,23 @@
+# Основные (все встроены в Python, но указаны для документации)
+# tkinter, sqlite3, json, datetime, random, os, pathlib - встроены
+
+# Дополнительные (устанавливаются через pip)
+matplotlib>=3.5.0
+numpy>=1.21.0
+japanize-matplotlib>=1.1.3
+pandas>=1.3.0
+googletrans==4.0.0-rc1
+pykakasi>=2.2.0
+jamdict>=0.1.6
+pyperclip>=1.8.2
+pillow>=9.0.0
+ttkthemes>=3.2.0
+
+# Для тестирования
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Для разработки
+black>=22.0.0
+flake8>=5.0.0
+mypy>=0.990
