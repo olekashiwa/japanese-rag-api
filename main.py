@@ -127,11 +127,11 @@ async def lifespan(app: FastAPI):
             raise ValueError("GROQ_API_KEY не найден в переменных окружения!")
         
         app.state.llm = ChatGroq(
-            model_name="llama-3.3-70b-versatile",
+            model_name="qwen/qwen3.8-27b",
             groq_api_key=groq_api_key,
             temperature=0.3
         )
-        app.state.model_name = "groq/llama-3.3-70b-versatile (cloud)"
+        app.state.model_name = "groq/qwen/qwen3.8-27b (cloud)"
         logging.info(f"INFO:  Подключен облачный LLM: {app.state.model_name}")
     
     else:
