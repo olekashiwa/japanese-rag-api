@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
 from langchain_ollama import ChatOllama
+from langchain_groq import ChatGroq  
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
@@ -34,7 +35,7 @@ COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "jp_learning_materials")
 EMBEDDING_MODEL_NAME = "intfloat/multilingual-e5-small"
 
 # Локальная Ollama
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11435")
 LLM_MODEL_NAME = os.getenv("LLM_MODEL", "qwen2.5:7b")
 
 # ==========================================
@@ -78,6 +79,7 @@ SYSTEM_PROMPT = """Ты — добрый, терпеливый и мудрый �
    - Закончи мотивирующей фразой
 4. Если в контексте нет ответа: честно скажи "В моих учебных материалах пока нет точного ответа на этот вопрос, но давай разберёмся вместе..." и НЕ выдумывай факты.
 5. Форматирование: используй жирный текст для ключевых терминов, японские примеры пиши с чтением в скобках и переводом.
+6. КРИТИЧЕСКИ ВАЖНО: Используй ТОЛЬКО японские грамматические термины из контекста (てしまう, た, ている и т.д.). Никогда не заменяй их английскими или русскими аналогами.
 
 КОНТЕКСТ ИЗ УЧЕБНИКОВ:
 {context}
@@ -96,50 +98,71 @@ prompt_template = ChatPromptTemplate.from_messages([
 # ==========================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Инициализация моделей при старте приложения."""
-    logging.info("🚀 Запуск RAG-сервиса для платформы японского языка...")
+    """Управление жизненным циклом приложения: инициализация и очистка ресурсов."""
+    
+    # ========== ИНИЦИАЛИЗАЦИЯ (до yield) ==========
     
     # 1. Подключение к Qdrant
-    try:
-        app.state.qdrant = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
-        collections = [c.name for c in app.state.qdrant.get_collections().collections]
-        if COLLECTION_NAME not in collections:
-            logging.warning(f"️ Коллекция '{COLLECTION_NAME}' не найдена. Сначала запустите rag_ingest.py")
-        else:
-            logging.info(f"✅ Подключено к Qdrant. Коллекция: {COLLECTION_NAME}")
-    except Exception as e:
-        logging.error(f"❌ Ошибка подключения к Qdrant: {e}")
-        raise
+    qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
+    qdrant_api_key = os.getenv("QDRANT_API_KEY")
+    
+    if qdrant_api_key:
+        app.state.qdrant = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
+    else:
+        app.state.qdrant = QdrantClient(url=qdrant_url)
+    
+    COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "jp_learning_materials")
+    logging.info(f"INFO: ✅ Подключено к Qdrant. Коллекция: {COLLECTION_NAME}")
     
     # 2. Загрузка модели эмбеддингов
-    logging.info(f"📦 Загрузка модели эмбеддингов: {EMBEDDING_MODEL_NAME}")
-    app.state.embedder = SentenceTransformer(EMBEDDING_MODEL_NAME)
-    logging.info("✅ Модель эмбеддингов загружена")
+    app.state.embedder = SentenceTransformer("intfloat/multilingual-e5-small")
+    logging.info("INFO: ✅ Модель эмбеддингов загружена")
     
-    # 3. Инициализация локальной Ollama
-    logging.info(f"🤖 Подключение к локальной Ollama: {OLLAMA_BASE_URL}")
-    app.state.llm = ChatOllama(
-        model=LLM_MODEL_NAME,
-        base_url=OLLAMA_BASE_URL,
-        temperature=0.3,
-        num_ctx=4096,  # Размер контекстного окна
-    )
+    # 3. ГИБКАЯ ИНИЦИАЛИЗАЦИЯ LLM
+    LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
     
-    # Проверка доступности модели
+    if LLM_PROVIDER == "groq":
+        groq_api_key = os.getenv("GROQ_API_KEY")
+        if not groq_api_key:
+            raise ValueError("GROQ_API_KEY не найден в переменных окружения!")
+        
+        app.state.llm = ChatGroq(
+            model_name="llama3-70b-8192",
+            groq_api_key=groq_api_key,
+            temperature=0.3
+        )
+        app.state.model_name = "groq/llama3-70b-8192 (cloud)"
+        logging.info(f"INFO:  Подключен облачный LLM: {app.state.model_name}")
+    
+    else:
+        ollama_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11435")
+        app.state.llm = ChatOllama(
+            model="qwen2.5:7b",
+            base_url=ollama_url,
+            temperature=0.3,
+            num_ctx=2048
+        )
+        app.state.model_name = "qwen2.5:7b (local)"
+        logging.info(f"INFO: 🤖 Подключен локальный LLM: {app.state.model_name} по адресу {ollama_url}")
+    
+    # 4. Проверка работы LLM
     try:
         test_response = app.state.llm.invoke("Тест")
-        logging.info(f"✅ Локальная LLM '{LLM_MODEL_NAME}' готова к работе")
+        logging.info(f"✅ LLM '{app.state.model_name}' готова к работе")
     except Exception as e:
-        logging.error(f"❌ Ошибка подключения к Ollama: {e}")
-        logging.error(f"Убедитесь, что Ollama запущен и модель скачана: ollama pull {LLM_MODEL_NAME}")
+        logging.error(f"❌ Ошибка подключения к LLM: {e}")
         raise
     
     logging.info("=" * 60)
     logging.info("🎉 RAG-сервис полностью готов к работе!")
     logging.info("=" * 60)
+    
+    # ========== YIELD (приложение работает) ==========
     yield
     
-    logging.info("🛑 Завершение работы сервиса...")
+    # ========== ОЧИСТКА (после yield) - опционально ==========
+    logging.info("INFO: Завершение работы сервиса...")
+    app.state.qdrant.close()
 
 app = FastAPI(
     title="🌸 Japanese Learning RAG API",
@@ -165,14 +188,14 @@ async def query_rag(request: RAGRequest):
             normalize_embeddings=True  # Важно для косинусного расстояния
         ).tolist()
         
-        # ШАГ 2: Семантический поиск в Qdrant
-        search_results = app.state.qdrant.search(
+        # ШАГ 2: Семантический поиск в Qdrant (новый API)
+        search_results = app.state.qdrant.query_points(
             collection_name=COLLECTION_NAME,
-            query_vector=query_embedding,
+            query=query_embedding,
             limit=request.top_k,
-            score_threshold=0.5  # Отсекаем нерелевантные результаты
-        )
-        
+            score_threshold=0.5
+        ).points
+                
         if not search_results:
             # Если ничего не найдено — возвращаем ответ без контекста
             logging.warning(f"По запросу '{request.query}' ничего не найдено в базе")
@@ -279,6 +302,6 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,  # Автоперезагрузка при изменении кода
+        reload=False,  # Автоперезагрузка при изменении кода
         log_level="info"
     )
