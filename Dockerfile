@@ -6,11 +6,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+# Копируем requirements
 COPY requirements.txt .
+
+# Устанавливаем torch CPU-версию (без CUDA, экономит ~2 ГБ!)
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+
+# Устанавливаем остальные зависимости
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Копируем код
 COPY . .
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

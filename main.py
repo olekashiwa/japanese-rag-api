@@ -115,7 +115,7 @@ async def lifespan(app: FastAPI):
     logging.info(f"INFO: ✅ Подключено к Qdrant. Коллекция: {COLLECTION_NAME}")
     
     # 2. Загрузка модели эмбеддингов
-    app.state.embedder = SentenceTransformer("intfloat/multilingual-e5-small")
+    app.state.embedder = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
     logging.info("INFO: ✅ Модель эмбеддингов загружена")
     
     # 3. ГИБКАЯ ИНИЦИАЛИЗАЦИЯ LLM
