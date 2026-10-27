@@ -51,7 +51,7 @@ class RAGRequest(BaseModel):
     query: str = Field(
         ..., 
         min_length=3, 
-        max_length=500,
+        max_length=3000,
         description="Вопрос ученика на русском или японском языке"
     )
     top_k: int = Field(default=3, ge=1, le=10, description="Количество чанков для поиска")
