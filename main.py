@@ -10,6 +10,7 @@ from typing import List, Optional
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
@@ -169,7 +170,6 @@ app = FastAPI(
     description="Интеллектуальный помощник для изучения японского языка на основе учебников",
     version="1.0.0",
     lifespan=lifespan
-    from fastapi.middleware.cors import CORSMiddleware
 )
 
 app.add_middleware(
