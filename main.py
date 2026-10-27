@@ -170,6 +170,7 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
     from fastapi.middleware.cors import CORSMiddleware
+)
 
 app.add_middleware(
     CORSMiddleware,
